@@ -13,59 +13,76 @@ class FloatingImageViews {
     private var _views: [UIView]
     private let _superview: UIView
     private let _imgName: String
-    private let _speed: CGFloat
-    private let _speed_variance: CGFloat
+    private let _speed: Double
+    private let _speed_variance: Double
     private var _view_speeds: [CGFloat]
+    private let _alpha_base: Double
+    private let _alpha_variance: Double
+    private let _scale_base: CGFloat
+    private let _scale_variance: CGFloat
     
-    init (superview: UIView, imageName: String, speed: Int = 10, speed_variance: Int = 20) {
+    init (superview: UIView, imageName: String, speedBase: Double = 10, speedVariance: Double = 20, alphaBase: Double = 0.5, alphaVariance: Double = 0.2, scaleBase: Double = 1, scaleVariance: Double = 1) {
         self._superview = superview
         self._imgName = imageName
         self._views = [UIView]()
-        self._speed = CGFloat(speed)
-        self._speed_variance = CGFloat(speed_variance)
+        
+        self._speed = speedBase < 1 ? 1 : speedBase
+        self._speed_variance = speedVariance
+        
         self._view_speeds = [CGFloat]()
+        
+        self._alpha_base = alphaBase
+        self._alpha_variance = alphaVariance
+        
+        self._scale_base = CGFloat(scaleBase)
+        self._scale_variance = CGFloat(scaleVariance)
     }
     
     func animate (numberOfViews: Int) {
-        for i in 0...numberOfViews {
-            let v = self._makeView(true)
-            _views.append(v)
-            _view_speeds.append(CGFloat(arc4random_uniform(UInt32(self._speed_variance))) + self._speed)
-            _move(v, cb: self._cycle)
+        for _ in 0...numberOfViews {
+            let v = self._createView()
+            self._configureView(v)
+            self._views.append(v)
+            self._superview.addSubview(v)
+            _view_speeds.append(CGFloat(self._getValueWithVariance(self._speed, range: self._speed_variance)))
+            _move(v, cb: _recycle)
         }
     }
     
-    private func _cycle (view: UIView) {
-        view.removeFromSuperview()
-        
-        let i = self._views.indexOf(view)!
-        
-        self._views.removeAtIndex(i)
-        
-        let newV = self._makeView()
-        
-        self._views.insert(newV, atIndex: i)
-        
-        self._superview.addSubview(newV)
-        
-        //print("cycle! \(self._views.count), \(i)")
-        
-        self._move(newV, cb: self._cycle)
+    private func _recycle (v: UIImageView) {
+        self._configureView(v)
+        _move(v, cb: _recycle)
     }
     
-    private func _makeView (attachToParent: Bool = false) -> UIView {
+    private func _createView () -> UIImageView {
         let img = UIImage(named: self._imgName)
+        let view = UIImageView()
+        view.image = img
         
-        let scale = CGFloat(arc4random_uniform(UInt32(7)) + 3) / 10.0
-        let alpha = CGFloat(arc4random_uniform(UInt32(5) + 2)) / 10.0
+        return view
+    }
+    
+    private func _configureView (view: UIImageView) {
+        let img = view.image
 
+        var scale = self._scale_base
+        
+        let scale_variance = CGFloat(_getValueWithVariance(Double(self._scale_base), range: Double(self._scale_variance)))
+        
+        if coinToss() {
+            scale *= scale_variance
+        } else  {
+            scale /= scale_variance
+        }
+
+        let alpha = CGFloat(_getValueWithVariance(Double(self._alpha_base), range: Double(self._alpha_variance)))
+print(scale, alpha)
         let width = img!.size.width * -1 * scale
         let height = img!.size.height * scale
         let x = CGFloat(0)
         let y = CGFloat(arc4random_uniform(UInt32(self._superview.frame.height)))
         let x_offset = CGFloat(arc4random_uniform(UInt32(100))) * -1
         let y_offset = CGFloat(arc4random_uniform(UInt32(height/2))) * -1
-
         
         let rect = CGRectMake(
             x + x_offset,
@@ -73,30 +90,56 @@ class FloatingImageViews {
             width,
             height
         )
-        
-        let view = UIImageView(frame: rect)
+
+        view.frame = rect
         view.image = img
         view.alpha = alpha
-        
-        if attachToParent {
-            self._superview.addSubview(view)
-        }
-        
-        return view
     }
-    
-    private func _move(v: UIView, cb: (v: UIView)->() = {_ in }){
+        
+    private func _move (v: UIImageView, cb: (v: UIImageView)->()) {
         UIView.animateWithDuration(1, delay: 0, options: [.CurveLinear], animations: { () -> Void in
             let view_index = self._views.indexOf(v)!
             let speed = self._view_speeds[view_index]
             
             v.center.x += speed
-            }) { (_) -> Void in
-                if v.frame.origin.x < self._superview.frame.width {
-                    self._move(v, cb: cb)
-                } else {
-                    cb(v: v)
-                }
+        }) { (_) -> Void in
+            if v.frame.origin.x < self._superview.frame.width {
+                self._move(v, cb: cb)
+            } else {
+                cb(v: v)
+            }
         }
     }
+    
+    private func coinToss () -> Bool {
+        return arc4random_uniform(2) % 2 == 0
+    }
+    
+    private func _randInRange(from: UInt32, _ to: UInt32) -> Int {
+        var r = arc4random_uniform(to) + from
+        
+        if r > to {
+            r = to
+        }
+        
+        return Int(r)
+    }
+    
+    private func _getValueWithVariance (base: Double, range: Double) -> Double {
+        let from = UInt32(1000)
+        let to = UInt32(range * 1000)
+        let result: Double
+        
+        let variance = Double(_randInRange(from, to)) / 1000.0
+        
+        if coinToss() {
+            result = base * variance
+        } else  {
+            result = base / variance
+        }
+        
+        return result
+    }
 }
+
+

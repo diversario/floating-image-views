@@ -19,10 +19,14 @@ class ViewController: UIViewController {
         let fl = FloatingImageViews(
             superview: self.view,
             imageName: "rain",
-            speed: 100,
-            speed_variance: 300
+            speedBase: 30,
+            speedVariance: 3,
+            alphaBase: 0.1,
+            alphaVariance: 1.5,
+            scaleBase: 1,
+            scaleVariance: 2
         )
-        fl.animate(10)
+        fl.animate(20)
     }
 }
 
