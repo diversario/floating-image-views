@@ -16,9 +16,9 @@ class ViewController: UIViewController {
     }
 
     override func viewDidAppear(animated: Bool) {
-        let fl = FloatingImageViews(
+        let fl1 = FloatingImageViews(
             superview: self.view,
-            imageName: "rain",
+            imageName: "cloud1",
             speedBase: 30,
             speedVariance: 3,
             alphaBase: 0.1,
@@ -26,7 +26,31 @@ class ViewController: UIViewController {
             scaleBase: 1,
             scaleVariance: 2
         )
-        fl.animate(20)
+        fl1.animate(6)
+        
+        let fl2 = FloatingImageViews(
+            superview: self.view,
+            imageName: "cloud2",
+            speedBase: 30,
+            speedVariance: 3,
+            alphaBase: 0.1,
+            alphaVariance: 1.5,
+            scaleBase: 1,
+            scaleVariance: 2
+        )
+        fl2.animate(6)
+        
+        let fl3 = FloatingImageViews(
+            superview: self.view,
+            imageName: "cloud3",
+            speedBase: 30,
+            speedVariance: 3,
+            alphaBase: 0.1,
+            alphaVariance: 1.5,
+            scaleBase: 1,
+            scaleVariance: 2
+        )
+        fl3.animate(6)
     }
 }
 
