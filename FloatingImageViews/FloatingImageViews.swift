@@ -12,7 +12,6 @@ import UIKit
 class FloatingImageViews {
     private var _views: [UIView]
     private let _superview: UIView
-    private let _imgName: String
     private let _speed: Double
     private let _speed_variance: Double
     private var _view_speeds: [CGFloat]
@@ -21,9 +20,14 @@ class FloatingImageViews {
     private let _scale_base: CGFloat
     private let _scale_variance: CGFloat
     
+    private let _image: UIImage?
+    
+    private var _stop = false
+    
     init (superview: UIView, imageName: String, speedBase: Double = 10, speedVariance: Double = 20, alphaBase: Double = 0.5, alphaVariance: Double = 0.2, scaleBase: Double = 1, scaleVariance: Double = 1) {
         self._superview = superview
-        self._imgName = imageName
+        //self._imgName = imageName
+        self._image = UIImage(named: imageName)
         self._views = [UIView]()
         
         self._speed = speedBase < 1 ? 1 : speedBase
@@ -49,15 +53,32 @@ class FloatingImageViews {
         }
     }
     
+    func fadeAndStop () {
+        UIView.animateWithDuration(1, animations: { () -> Void in
+            for view in self._views {
+                view.alpha = 0
+            }
+            }) { (_) -> Void in
+                self._stop = true
+                for view in self._views {
+                    view.removeFromSuperview()
+                }
+        }
+    }
+    
     private func _recycle (v: UIImageView) {
+        if self._stop {
+            return
+        }
+        
         self._configureView(v)
         _move(v, cb: _recycle)
     }
     
     private func _createView () -> UIImageView {
-        let img = UIImage(named: self._imgName)
+        //let img = UIImage(named: self._imgName)
         let view = UIImageView()
-        view.image = img
+        view.image = self._image
         
         return view
     }
@@ -76,7 +97,7 @@ class FloatingImageViews {
         }
 
         let alpha = CGFloat(_getValueWithVariance(Double(self._alpha_base), range: Double(self._alpha_variance)))
-print(scale, alpha)
+
         let width = img!.size.width * -1 * scale
         let height = img!.size.height * scale
         let x = CGFloat(0)
@@ -95,7 +116,7 @@ print(scale, alpha)
         view.image = img
         view.alpha = alpha
     }
-        
+
     private func _move (v: UIImageView, cb: (v: UIImageView)->()) {
         UIView.animateWithDuration(1, delay: 0, options: [.CurveLinear], animations: { () -> Void in
             let view_index = self._views.indexOf(v)!

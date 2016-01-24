@@ -9,6 +9,9 @@
 import UIKit
 
 class ViewController: UIViewController {
+    var fl1: FloatingImageViews!
+    var fl2: FloatingImageViews!
+    var fl3: FloatingImageViews!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -16,7 +19,22 @@ class ViewController: UIViewController {
     }
 
     override func viewDidAppear(animated: Bool) {
-        let fl1 = FloatingImageViews(
+        clouds()
+    }
+    
+    
+    @IBAction func button(sender: UIButton) {
+        clouds()
+    }
+    
+    func clouds () {
+        if let f1 = fl1, f2 = fl2, f3 = fl3 {
+            f1.fadeAndStop()
+            f2.fadeAndStop()
+            f3.fadeAndStop()
+        }
+        
+        fl1 = FloatingImageViews(
             superview: self.view,
             imageName: "cloud1",
             speedBase: 30,
@@ -28,7 +46,7 @@ class ViewController: UIViewController {
         )
         fl1.animate(6)
         
-        let fl2 = FloatingImageViews(
+        fl2 = FloatingImageViews(
             superview: self.view,
             imageName: "cloud2",
             speedBase: 30,
@@ -40,7 +58,7 @@ class ViewController: UIViewController {
         )
         fl2.animate(6)
         
-        let fl3 = FloatingImageViews(
+        fl3 = FloatingImageViews(
             superview: self.view,
             imageName: "cloud3",
             speedBase: 30,
